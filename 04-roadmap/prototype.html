@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Affordability check before the plan options · Prototype</title>
+<style>
+:root{
+  --ink:#1d2b33;--muted:#53646c;--paper:#f3f6f5;--card:#ffffff;--line:#cfd9d6;
+  --accent:#1f4e6b;--accent-ink:#ffffff;
+  --fits:#1b6140;--fits-bg:#e1f2e8;
+  --stretch:#7a4f00;--stretch-bg:#fbefd0;
+  --high:#92291d;--high-bg:#fbe3df;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 56px}
+.demo{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin:0 0 20px;font-size:13px;color:var(--muted)}
+.demo b{font-weight:600;color:var(--ink)}
+.demo button{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:2px 10px}
+.demo button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.demo .restart{margin-left:auto}
+.steps{display:flex;gap:6px;list-style:none;margin:0 0 4px;padding:0}
+.steps li{flex:1;border-top:4px solid var(--line);padding-top:6px;font-size:13px;color:var(--muted)}
+.steps li[aria-current="step"]{border-top-color:var(--accent);color:var(--ink);font-weight:600}
+.steps li.done{border-top-color:var(--fits)}
+.stepcount{font-size:13px;color:var(--muted);margin:0 0 14px}
+h1{font-size:26px;line-height:1.2;margin:0 0 12px;font-weight:650;outline:none}
+.claim{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--muted);margin:0 0 20px}
+.claim strong{color:var(--ink)}
+label{display:block;font-weight:600;margin:0 0 6px}
+.field{display:flex;align-items:center;gap:8px;max-width:340px}
+.field .pre,.field .suf{color:var(--muted)}
+input[type=text]{font:inherit;width:100%;min-width:0;padding:10px 12px;border:1.5px solid var(--muted);border-radius:8px;background:var(--card);color:var(--ink)}
+input[type=text][aria-invalid="true"]{border-color:var(--high)}
+.note{font-size:14px;color:var(--muted);margin:8px 0 0}
+.err{font-size:14px;color:var(--high);margin:8px 0 0;font-weight:600}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin:20px 0 0}
+.btn{font:inherit;font-weight:600;cursor:pointer;border-radius:8px;border:1.5px solid var(--accent);background:var(--card);color:var(--accent);padding:10px 18px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.linkbtn{font:inherit;cursor:pointer;background:none;border:none;color:var(--accent);text-decoration:underline;padding:4px 2px}
+:is(button,input,a):focus-visible{outline:3px solid #e0a100;outline-offset:2px}
+.box{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 14px;margin:14px 0}
+.box.info{border-left:5px solid var(--accent);border-radius:4px 10px 10px 4px}
+.box.notice{border-left:5px solid var(--stretch);border-radius:4px 10px 10px 4px}
+.box p{margin:0}
+.box .actions{margin-top:10px}
+.incomebar{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin:0 0 6px}
+.incomebar strong{font-size:18px}
+.plans{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.term{font-size:18px;font-weight:650}
+.inst{font-size:22px;font-weight:650;margin:2px 0 0}
+.inst small{font-size:14px;font-weight:400;color:var(--muted)}
+.meta{font-size:14px;color:var(--muted);margin:2px 0 0}
+.pct{font-size:15px;margin:6px 0 0;font-weight:600}
+.sub{font-size:14px;margin:2px 0 0}
+.warn{font-size:14px;margin:10px 0 0;padding:8px 10px;background:var(--high-bg);color:var(--high);border-radius:8px;font-weight:600}
+.card .btn{margin-top:12px;width:100%}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:650;border-radius:999px;padding:3px 11px 3px 8px;border:1.5px solid}
+.chip svg{width:16px;height:16px;flex:none}
+.chip.fits{color:var(--fits);background:var(--fits-bg);border-color:var(--fits)}
+.chip.stretch{color:var(--stretch);background:var(--stretch-bg);border-color:var(--stretch)}
+.chip.high{color:var(--high);background:var(--high-bg);border-color:var(--high)}
+dl.summary{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0}
+dl.summary dt{color:var(--muted)}
+dl.summary dd{margin:0;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:28px;font-size:12px;color:var(--muted)}
+@media (max-width:420px){
+  h1{font-size:23px}
+  .actions{gap:10px}
+  .actions .btn{width:100%}
+}
+@media (prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="demo" id="demo" role="group" aria-label="Demo controls, not part of the product">
+    <b>Demo controls</b>
+    <span>Open claims on this account:</span>
+    <button type="button" data-claims="1" aria-pressed="true">1</button>
+    <button type="button" data-claims="2" aria-pressed="false">2</button>
+    <button type="button" data-claims="3" aria-pressed="false">3</button>
+    <button type="button" class="restart" data-action="restart">Restart</button>
+  </div>
+  <div id="app"></div>
+  <div id="live" class="sr" aria-live="polite"></div>
+  <footer>Prototype with sample data. Nothing is saved or sent. The fit thresholds (Fits up to 10% of income, Stretch up to 20%) are placeholders pending compliance and BA sign-off.</footer>
+</div>
+
+<script>
+var CONFIG = {FITS_MAX: 10, STRETCH_MAX: 20, CONFIRM_ABOVE: 10000, INCOME_MAX: 99999};
+var CLAIM = {creditor: "Northwind Telecom", ref: "RV-204118", balance: 720};
+var FIRST_DUE = "1 December 2026";
+var PLANS = [6, 12, 24].map(function (m) { return {months: m, installment: CLAIM.balance / m}; });
+var RANK = {fits: 0, stretch: 1, high: 2};
+var LABEL = {fits: "Fits", stretch: "Stretch", high: "Likely too high"};
+var SUBCOPY = {
+  fits: "Fits the income you entered.",
+  stretch: "A stretch on the income you entered.",
+  high: "Likely too high for the income you entered."
+};
+var ICON = {
+  fits: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.8 8.4l2.2 2.2 4.2-4.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  stretch: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 6.4h6M5 9.6h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  high: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l6.5 11.5h-13z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.4v.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+};
+
+var euro2 = new Intl.NumberFormat("en-IE", {style: "currency", currency: "EUR"});
+var euro0 = new Intl.NumberFormat("en-IE", {style: "currency", currency: "EUR", maximumFractionDigits: 0});
+
+var state = fresh(1);
+function fresh(claims) {
+  return {screen: 1, income: null, claims: claims, draft: "", error: "", pending: null,
+          editing: false, editDraft: "", editError: "", warnMonths: null, chosen: null, focus: null};
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function parseIncome(str) {
+  var s = String(str).trim().replace(/[\u20ac\s,]/g, "");
+  var msg = "Enter a monthly amount in euros, or skip.";
+  if (s === "" || !/^\d+$/.test(s)) return {err: msg};
+  var n = parseInt(s, 10);
+  if (n < 1) return {err: msg};
+  if (n > CONFIG.INCOME_MAX) return {err: "Enter an amount up to " + euro0.format(CONFIG.INCOME_MAX) + " per month."};
+  return {value: n};
+}
+
+function labelFor(pct) {
+  if (pct <= CONFIG.FITS_MAX) return "fits";
+  if (pct <= CONFIG.STRETCH_MAX) return "stretch";
+  return "high";
+}
+
+function evaluate(income) {
+  var list = PLANS.map(function (p) {
+    var pct = Math.round(p.installment / income * 100);
+    return {months: p.months, installment: p.installment, pct: pct, label: labelFor(pct)};
+  });
+  var anyFits = list.some(function (p) { return p.label === "fits"; });
+  list.sort(function (a, b) {
+    if (RANK[a.label] !== RANK[b.label]) return RANK[a.label] - RANK[b.label];
+    return anyFits ? a.months - b.months : a.installment - b.installment;
+  });
+  return {plans: list, anyFits: anyFits};
+}
+
+function say(msg) { document.getElementById("live").textContent = msg; }
+
+function stepsHTML() {
+  var names = ["Income", "Plans", "Confirmed"];
+  var items = names.map(function (n, i) {
+    var num = i + 1;
+    var cls = num < state.screen ? "done" : "";
+    var cur = num === state.screen ? ' aria-current="step"' : "";
+    return '<li class="' + cls + '"' + cur + '>' + n + '</li>';
+  }).join("");
+  return '<ol class="steps" aria-label="Progress">' + items + '</ol><p class="stepcount">Step ' + state.screen + ' of 3</p>';
+}
+
+function claimHeader() {
+  return '<div class="claim">' + CLAIM.creditor + ' · Claim ' + CLAIM.ref + ' · <strong>Balance ' + euro2.format(CLAIM.balance) + '</strong></div>';
+}
+
+function confirmBox(ctx) {
+  if (!state.pending || state.pending.ctx !== ctx) return "";
+  return '<div class="box notice" role="alert"><p><strong>Is ' + euro0.format(state.pending.value) + ' per month?</strong> That is a high monthly amount. Check it is not a yearly figure.</p>' +
+    '<div class="actions"><button type="button" class="btn primary" data-action="confirm-yes">Yes, per month</button>' +
+    '<button type="button" class="btn" data-action="confirm-no">No, change it</button></div></div>';
+}
+
+function screen1() {
+  var invalid = state.error ? ' aria-invalid="true"' : "";
+  return '<h1 id="heading" tabindex="-1">Confirm your income</h1>' + claimHeader() +
+    '<form id="income-form" novalidate>' +
+      '<label for="income">Monthly income</label>' +
+      '<div class="field"><span class="pre" aria-hidden="true">\u20ac</span>' +
+      '<input type="text" id="income" inputmode="numeric" autocomplete="off" value="' + esc(state.draft) + '"' + invalid + ' aria-describedby="income-hint income-use' + (state.error ? ' income-err' : '') + '">' +
+      '<span class="suf">per month</span></div>' +
+      '<p class="note" id="income-hint">Enter what you receive in a typical month.</p>' +
+      '<p class="note" id="income-use">We use this only to show which plans fit.</p>' +
+      (state.error ? '<p class="err" id="income-err" role="alert">' + state.error + '</p>' : '') +
+      confirmBox("entry") +
+      '<div class="actions"><button type="submit" class="btn primary">See plans that fit</button>' +
+      '<button type="button" class="linkbtn" data-action="skip">Skip for now</button></div>' +
+    '</form>';
+}
+
+function editorHTML() {
+  var invalid = state.editError ? ' aria-invalid="true"' : "";
+  return '<form id="edit-form" class="box" novalidate>' +
+    '<label for="income-edit">Monthly income</label>' +
+    '<div class="field"><span class="pre" aria-hidden="true">\u20ac</span>' +
+    '<input type="text" id="income-edit" inputmode="numeric" autocomplete="off" value="' + esc(state.editDraft) + '"' + invalid + ' aria-describedby="edit-use' + (state.editError ? ' edit-err' : '') + '">' +
+    '<span class="suf">per month</span></div>' +
+    '<p class="note" id="edit-use">We use this only to show which plans fit.</p>' +
+    (state.editError ? '<p class="err" id="edit-err" role="alert">' + state.editError + '</p>' : '') +
+    confirmBox("edit") +
+    '<div class="actions"><button type="submit" class="btn primary">Update plans</button>' +
+    '<button type="button" class="linkbtn" data-action="edit-cancel">Cancel</button></div></form>';
+}
+
+function chip(l) { return '<span class="chip ' + l + '">' + ICON[l] + '<span>' + LABEL[l] + '</span></span>'; }
+
+function planCard(p, withIncome) {
+  var months = p.months;
+  var warn = (withIncome && state.warnMonths === months)
+    ? '<p class="warn" role="status">This installment is ' + p.pct + '% of the income you entered. You can still choose it.</p>' : "";
+  var btnText = (withIncome && state.warnMonths === months) ? "Choose anyway" : "Choose this plan";
+  return '<li class="card">' +
+    '<div class="top"><div><div class="term">' + months + ' months</div>' +
+    '<div class="inst">' + euro2.format(p.installment) + ' <small>per month</small></div>' +
+    '<div class="meta">Total ' + euro2.format(CLAIM.balance) + '</div></div>' +
+    (withIncome ? chip(p.label) : '') + '</div>' +
+    (withIncome ? '<p class="pct">' + p.pct + '% of the income you entered</p><p class="sub">' + SUBCOPY[p.label] + '</p>' : '') +
+    warn +
+    '<button type="button" class="btn" data-action="choose" data-months="' + months + '" aria-label="' + btnText + ': ' + months + ' months">' + btnText + '</button>' +
+  '</li>';
+}
+
+function otherClaimsText() {
+  var n = state.claims - 1;
+  return "This check covers this claim only. You have " + n + " other open claim" + (n === 1 ? "" : "s") + ".";
+}
+
+function screen2() {
+  var html = '<h1 id="heading" tabindex="-1">Plans that fit</h1>' + claimHeader();
+  var withIncome = state.income !== null;
+  if (withIncome) {
+    html += '<div class="incomebar"><span>Income used:</span> <strong>' + euro0.format(state.income) + ' per month</strong>' +
+      '<button type="button" class="linkbtn" data-action="edit-open">Edit</button></div>';
+  } else {
+    html += '<div class="box info"><p><strong>No income entered, so no plan is marked as fitting.</strong></p>' +
+      '<div class="actions"><button type="button" class="linkbtn" data-action="edit-open">Add income to see what fits</button></div></div>';
+  }
+  if (state.editing) html += editorHTML();
+  if (state.claims >= 2) html += '<div class="box info" role="note"><p>' + otherClaimsText() + '</p></div>';
+
+  var plans;
+  if (withIncome) {
+    var ev = evaluate(state.income);
+    plans = ev.plans;
+    if (!ev.anyFits) {
+      html += '<div class="box notice" role="note"><p>None of these plans fit comfortably. You can still choose one, or call us on [placeholder number].</p></div>';
+    }
+  } else {
+    plans = PLANS.map(function (p) { return {months: p.months, installment: p.installment}; });
+  }
+  html += '<ol class="plans" aria-label="Payment plans">' + plans.map(function (p) { return planCard(p, withIncome); }).join("") + '</ol>';
+  return html;
+}
+
+function screen3() {
+  var p = state.chosen;
+  var html = '<h1 id="heading" tabindex="-1">Your plan is set</h1>' +
+    '<div class="box"><dl class="summary">' +
+    '<dt>Plan</dt><dd>' + p.months + ' months</dd>' +
+    '<dt>Installment</dt><dd>' + euro2.format(p.installment) + ' per month</dd>' +
+    '<dt>First payment due</dt><dd>' + FIRST_DUE + '</dd>' +
+    '<dt>Total</dt><dd>' + euro2.format(CLAIM.balance) + '</dd></dl></div>';
+  if (state.income !== null) {
+    html += '<p>' + chip(p.label) + '</p><p class="sub">' + SUBCOPY[p.label] + '</p>' +
+      '<p class="note">Based on the income you entered: ' + euro0.format(state.income) + ' per month (' + p.pct + '%).</p>';
+  } else {
+    html += '<p class="note">You skipped the income step, so no fit check was shown for this plan.</p>';
+  }
+  if (state.claims >= 2) html += '<p class="note">' + otherClaimsText() + '</p>';
+  html += '<div class="actions"><button type="button" class="btn primary" data-action="done">Done</button>' +
+    '<button type="button" class="linkbtn" data-action="change-plan">Change plan</button></div>';
+  return html;
+}
+
+function render() {
+  var body = state.screen === 1 ? screen1() : state.screen === 2 ? screen2() : screen3();
+  document.getElementById("app").innerHTML = stepsHTML() + body;
+  var btns = document.querySelectorAll("[data-claims]");
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].setAttribute("aria-pressed", String(parseInt(btns[i].getAttribute("data-claims"), 10) === state.claims));
+  }
+  if (state.focus) {
+    var el = document.getElementById(state.focus);
+    if (el) el.focus();
+    state.focus = null;
+  }
+}
+
+function announceUpdate() {
+  var ev = evaluate(state.income);
+  var n = ev.plans.filter(function (p) { return p.label === "fits"; }).length;
+  say("Plans updated for " + euro0.format(state.income) + " per month. " + n + " of 3 plans fit.");
+}
+
+function commit(value, ctx) {
+  state.income = value;
+  state.pending = null;
+  state.error = "";
+  state.editError = "";
+  state.warnMonths = null;
+  if (ctx === "entry") {
+    state.screen = 2;
+    state.focus = "heading";
+    render();
+    announceUpdate();
+  } else {
+    state.editing = false;
+    state.focus = "heading";
+    render();
+    announceUpdate();
+  }
+}
+
+function trySubmit(raw, ctx) {
+  var r = parseIncome(raw);
+  if (r.err) {
+    if (ctx === "entry") { state.error = r.err; state.focus = "income"; }
+    else { state.editError = r.err; state.focus = "income-edit"; }
+    state.pending = null;
+    render();
+    return;
+  }
+  if (ctx === "entry") state.error = ""; else state.editError = "";
+  if (r.value > CONFIG.CONFIRM_ABOVE) {
+    state.pending = {value: r.value, ctx: ctx};
+    state.focus = null;
+    render();
+    return;
+  }
+  commit(r.value, ctx);
+}
+
+document.addEventListener("submit", function (e) {
+  e.preventDefault();
+  if (e.target.id === "income-form") trySubmit(state.draft, "entry");
+  if (e.target.id === "edit-form") trySubmit(state.editDraft, "edit");
+});
+
+document.addEventListener("input", function (e) {
+  if (e.target.id === "income") state.draft = e.target.value;
+  if (e.target.id === "income-edit") state.editDraft = e.target.value;
+});
+
+document.addEventListener("click", function (e) {
+  var t = e.target.closest ? e.target.closest("button") : null;
+  if (!t) return;
+
+  if (t.hasAttribute("data-claims")) {
+    state.claims = parseInt(t.getAttribute("data-claims"), 10);
+    state.focus = null;
+    render();
+    return;
+  }
+  var a = t.getAttribute("data-action");
+  if (!a) return;
+
+  if (a === "restart") {
+    state = fresh(state.claims);
+    state.focus = "heading";
+    render();
+    say("Prototype restarted.");
+  } else if (a === "skip") {
+    state.income = null;
+    state.pending = null;
+    state.error = "";
+    state.screen = 2;
+    state.focus = "heading";
+    render();
+    say("Income skipped. Plans are shown without fit labels.");
+  } else if (a === "edit-open") {
+    state.editing = true;
+    state.editDraft = state.income !== null ? String(state.income) : "";
+    state.editError = "";
+    state.pending = null;
+    state.focus = "income-edit";
+    render();
+  } else if (a === "edit-cancel") {
+    state.editing = false;
+    state.editError = "";
+    state.pending = null;
+    render();
+  } else if (a === "confirm-yes") {
+    var ctx = state.pending ? state.pending.ctx : "entry";
+    var val = state.pending ? state.pending.value : null;
+    if (val !== null) commit(val, ctx);
+  } else if (a === "confirm-no") {
+    var c2 = state.pending ? state.pending.ctx : "entry";
+    state.pending = null;
+    state.focus = c2 === "entry" ? "income" : "income-edit";
+    render();
+  } else if (a === "choose") {
+    var months = parseInt(t.getAttribute("data-months"), 10);
+    var plan;
+    if (state.income !== null) {
+      plan = evaluate(state.income).plans.filter(function (p) { return p.months === months; })[0];
+      if (plan.label === "high" && state.warnMonths !== months) {
+        state.warnMonths = months;
+        render();
+        var again = document.querySelector('[data-action="choose"][data-months="' + months + '"]');
+        if (again) again.focus();
+        return;
+      }
+    } else {
+      var base = PLANS.filter(function (p) { return p.months === months; })[0];
+      plan = {months: base.months, installment: base.installment};
+    }
+    state.chosen = plan;
+    state.screen = 3;
+    state.focus = "heading";
+    render();
+  } else if (a === "change-plan") {
+    state.chosen = null;
+    state.warnMonths = null;
+    state.screen = 2;
+    state.focus = "heading";
+    render();
+  } else if (a === "done") {
+    state = fresh(state.claims);
+    state.focus = "heading";
+    render();
+    say("Prototype restarted.");
+  }
+});
+
+render();
+</script>
+</body>
+</html>
