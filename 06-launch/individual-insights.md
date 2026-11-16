@@ -2,22 +2,16 @@
 
 > Module 6 · Launch Impactful GTM Plans, ★ Deliverable 6 (reflection)
 >
-> _The personal reflection that closes your final project._
+> Amazing what output you get from AI with correct prompting, but also how important it is to properly reflect and digest the response from AI.
 
 ## Friction points
 
-_The biggest technical or strategic challenge you faced while developing your product concept._
-
-_____
+The lack of time to really assess feedback and iterate together with the AI
 
 ## Key learnings
 
-_A few surprising discoveries or insights you gained from the course overall._
-
-_____
+I will never write a PRD from scratch any more!
 
 ## Aha! moment
 
-_Your main "aha" moment during the project process._
-
-_____
+The speed which you can create a prototype using AI
